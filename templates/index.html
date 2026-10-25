@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediSense – AI Health Assistant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh;}
+
+  /* ── WELCOME PAGE ── */
+  #welcome-page{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100vh;
+    background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);
+    position:relative;overflow:hidden;
+  }
+  #welcome-page::before{
+    content:'';position:absolute;width:600px;height:600px;
+    background:radial-gradient(circle,rgba(99,179,237,.15) 0%,transparent 70%);
+    top:-100px;right:-100px;border-radius:50%;
+  }
+  #welcome-page::after{
+    content:'';position:absolute;width:500px;height:500px;
+    background:radial-gradient(circle,rgba(129,140,248,.12) 0%,transparent 70%);
+    bottom:-80px;left:-80px;border-radius:50%;
+  }
+  .welcome-logo{font-size:3.5rem;margin-bottom:.5rem;}
+  .welcome-brand{font-size:3rem;font-weight:800;
+    background:linear-gradient(90deg,#60a5fa,#a78bfa,#34d399);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;letter-spacing:-1px;
+  }
+  .welcome-tagline{font-size:1.1rem;color:#94a3b8;margin:.8rem 0 .4rem;text-align:center;max-width:500px;line-height:1.6;}
+  .welcome-sub{font-size:.9rem;color:#64748b;margin-bottom:2.5rem;text-align:center;}
+  .badge-row{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem;}
+  .badge{background:rgba(99,179,237,.12);border:1px solid rgba(99,179,237,.3);
+    color:#93c5fd;padding:.35rem .9rem;border-radius:20px;font-size:.78rem;font-weight:500;}
+  .btn-register{
+    background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    color:#fff;border:none;padding:1rem 3rem;border-radius:50px;
+    font-size:1.1rem;font-weight:700;cursor:pointer;
+    box-shadow:0 8px 32px rgba(99,102,241,.4);
+    transition:all .3s;position:relative;z-index:1;
+  }
+  .btn-register:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(99,102,241,.55);}
+  .btn-register:active{transform:translateY(0);}
+  .accessibility-icons{display:flex;gap:1.5rem;margin-top:2rem;color:#475569;font-size:.85rem;}
+  .accessibility-icons span{display:flex;align-items:center;gap:.4rem;}
+
+  /* ── MAIN APP ── */
+  #app{display:none;min-height:100vh;background:#0f172a;}
+
+  /* HEADER */
+  .app-header{
+    background:rgba(15,23,42,.95);backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;
+  }
+  .app-logo{font-size:1.4rem;font-weight:800;
+    background:linear-gradient(90deg,#60a5fa,#a78bfa);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .app-step-label{font-size:.85rem;color:#64748b;}
+
+  /* PROGRESS STAGES */
+  .progress-wrapper{
+    background:rgba(30,41,59,.6);border-bottom:1px solid rgba(255,255,255,.06);
+    padding:1.2rem 2rem;overflow-x:auto;
+  }
+  .progress-stages{
+    display:flex;align-items:center;justify-content:center;
+    min-width:700px;gap:0;
+  }
+  .stage{
+    display:flex;flex-direction:column;align-items:center;gap:.4rem;
+    flex:1;position:relative;cursor:default;
+  }
+  .stage:not(:last-child)::after{
+    content:'';position:absolute;top:20px;left:calc(50% + 24px);
+    width:calc(100% - 48px);height:2px;
+    background:rgba(255,255,255,.1);z-index:0;transition:background .4s;
+  }
+  .stage.completed:not(:last-child)::after{background:linear-gradient(90deg,#3b82f6,#8b5cf6);}
+  .stage-circle{
+    width:40px;height:40px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;font-weight:700;z-index:1;
+    background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);
+    color:#64748b;transition:all .4s;
+  }
+  .stage.active .stage-circle{
+    background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    border-color:transparent;color:#fff;
+    box-shadow:0 0 20px rgba(99,102,241,.5);
+  }
+  .stage.completed .stage-circle{
+    background:linear-gradient(135deg,#10b981,#059669);
+    border-color:transparent;color:#fff;
+  }
+  .stage-label{font-size:.7rem;color:#64748b;font-weight:500;text-align:center;transition:color .4s;}
+  .stage.active .stage-label{color:#93c5fd;font-weight:600;}
+  .stage.completed .stage-label{color:#6ee7b7;}
+
+  /* FORM CONTAINER */
+  .form-container{max-width:760px;margin:2.5rem auto;padding:0 1.5rem 4rem;}
+  .form-card{
+    background:rgba(30,41,59,.7);border:1px solid rgba(255,255,255,.1);
+    border-radius:20px;padding:2.5rem;backdrop-filter:blur(10px);
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  .form-title{font-size:1.6rem;font-weight:700;margin-bottom:.4rem;
+    background:linear-gradient(90deg,#60a5fa,#a78bfa);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .form-subtitle{color:#64748b;font-size:.9rem;margin-bottom:2rem;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;}
+  .form-row.full{grid-template-columns:1fr;}
+  .form-group{display:flex;flex-direction:column;gap:.45rem;}
+  .form-group label{font-size:.85rem;font-weight:600;color:#94a3b8;}
+  .form-group label .req{color:#f87171;margin-left:2px;}
+  .form-group input,.form-group select,.form-group textarea{
+    background:rgba(15,23,42,.8);border:1px solid rgba(255,255,255,.12);
+    color:#f1f5f9;padding:.75rem 1rem;border-radius:10px;
+    font-size:.92rem;font-family:'Inter',sans-serif;
+    transition:border-color .3s,box-shadow .3s;outline:none;
+  }
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+    border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2);}
+  .form-group select option{background:#1e293b;}
+  .form-group textarea{resize:vertical;min-height:90px;}
+
+  /* SYMPTOMS CHECKBOXES */
+  .symptoms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin-top:.5rem;}
+  .symptom-item{
+    display:flex;align-items:center;gap:.65rem;
+    background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.1);
+    padding:.7rem 1rem;border-radius:10px;cursor:pointer;
+    transition:all .25s;user-select:none;
+  }
+  .symptom-item:hover{border-color:#3b82f6;background:rgba(59,130,246,.08);}
+  .symptom-item.selected{border-color:#8b5cf6;background:rgba(139,92,246,.15);}
+  .symptom-item input[type=checkbox]{display:none;}
+  .symptom-check{
+    width:18px;height:18px;border-radius:5px;border:2px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    transition:all .25s;
+  }
+  .symptom-item.selected .symptom-check{background:#8b5cf6;border-color:#8b5cf6;}
+  .symptom-check::after{content:'✓';font-size:.7rem;color:#fff;opacity:0;transition:opacity .2s;}
+  .symptom-item.selected .symptom-check::after{opacity:1;}
+  .symptom-text{font-size:.85rem;color:#cbd5e1;}
+
+  /* DOCTOR RECOMMENDATION */
+  .doctor-recommendation{
+    background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(59,130,246,.12));
+    border:1px solid rgba(52,211,153,.35);border-radius:14px;
+    padding:1.2rem;margin:1.25rem 0;
+  }
+  .doctor-recommendation h3{font-size:1.05rem;color:#a7f3d0;margin-bottom:.55rem;}
+  .doctor-recommendation p{font-size:.86rem;color:#cbd5e1;line-height:1.65;margin:.3rem 0;}
+  .doctor-recommendation .doctor-note{font-size:.78rem;color:#94a3b8;margin-top:.65rem;}
+
+  /* HOSPITAL CARD */
+  .hospital-card{
+    background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(16,185,129,.08));
+    border:1px solid rgba(99,102,241,.35);border-radius:16px;
+    padding:1.5rem;margin:1.5rem 0;
+  }
+  .hospital-card h3{font-size:1.15rem;font-weight:700;color:#f1f5f9;margin-bottom:.35rem;}
+  .hospital-card .hospital-meta{font-size:.82rem;color:#94a3b8;line-height:1.7;}
+  .hospital-card .hospital-specialties{margin-top:.7rem;}
+  .hospital-list{display:grid;gap:.8rem;margin-top:.8rem;}
+  .hospital-option{
+    background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;padding:1rem;cursor:pointer;transition:all .25s;
+  }
+  .hospital-option:hover{border-color:#3b82f6;background:rgba(59,130,246,.08);}
+  .hospital-option.selected{border-color:#8b5cf6;background:rgba(139,92,246,.15);}
+  .hospital-option h4{font-size:.95rem;color:#f1f5f9;margin-bottom:.25rem;}
+  .hospital-option p{font-size:.78rem;color:#94a3b8;margin:.2rem 0;}
+  .insurance-list{display:grid;gap:.8rem;margin-top:.8rem;}
+  .insurance-option{
+    display:flex;align-items:flex-start;gap:.75rem;
+    background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;padding:1rem;cursor:pointer;transition:all .25s;
+  }
+  .insurance-option:hover{border-color:#3b82f6;}
+  .insurance-option.selected{border-color:#8b5cf6;background:rgba(139,92,246,.15);}
+  .insurance-option input{margin-top:.2rem;}
+  .insurance-name{font-weight:700;color:#f1f5f9;font-size:.9rem;}
+  .insurance-type{font-size:.75rem;color:#94a3b8;margin-top:.2rem;}
+
+  /* PAYMENT */
+  .payment-tabs{display:flex;gap:.75rem;margin-bottom:1.5rem;}
+  .pay-tab{
+    flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.1);
+    background:rgba(15,23,42,.6);cursor:pointer;text-align:center;
+    font-size:.85rem;font-weight:600;color:#64748b;transition:all .25s;
+  }
+  .pay-tab.active{border-color:#3b82f6;background:rgba(59,130,246,.12);color:#93c5fd;}
+  .card-visual{
+    background:linear-gradient(135deg,#1e3a5f,#312e81);
+    border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;
+    border:1px solid rgba(99,102,241,.3);position:relative;overflow:hidden;
+  }
+  .card-visual::before{
+    content:'';position:absolute;width:200px;height:200px;
+    background:radial-gradient(circle,rgba(255,255,255,.05),transparent);
+    top:-50px;right:-50px;border-radius:50%;
+  }
+  .card-chip{width:40px;height:30px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:6px;margin-bottom:1rem;}
+  .card-number-display{font-size:1.3rem;letter-spacing:4px;color:#e2e8f0;margin-bottom:.75rem;font-family:monospace;}
+  .card-meta{display:flex;justify-content:space-between;font-size:.75rem;color:#94a3b8;}
+
+  /* RECEIPT */
+  .receipt-card{
+    background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(5,150,105,.05));
+    border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:2rem;
+  }
+  .receipt-header{text-align:center;border-bottom:1px dashed rgba(255,255,255,.15);padding-bottom:1.5rem;margin-bottom:1.5rem;}
+  .receipt-check{font-size:3rem;margin-bottom:.5rem;}
+  .receipt-row{display:flex;justify-content:space-between;margin:.6rem 0;font-size:.9rem;}
+  .receipt-row .label{color:#64748b;}
+  .receipt-row .value{color:#f1f5f9;font-weight:600;}
+  .receipt-divider{border:none;border-top:1px dashed rgba(255,255,255,.1);margin:1rem 0;}
+
+  /* BUTTONS */
+  .btn-primary{
+    background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    color:#fff;border:none;padding:.85rem 2.5rem;border-radius:12px;
+    font-size:1rem;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 20px rgba(99,102,241,.4);transition:all .3s;
+    display:inline-flex;align-items:center;gap:.5rem;
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(99,102,241,.55);}
+  .btn-secondary{
+    background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.12);
+    padding:.85rem 2rem;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s;
+  }
+  .btn-secondary:hover{background:rgba(255,255,255,.1);}
+  .btn-download{
+    background:linear-gradient(135deg,#10b981,#059669);
+    color:#fff;border:none;padding:1rem 2.5rem;border-radius:12px;
+    font-size:1rem;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 20px rgba(16,185,129,.4);transition:all .3s;
+    display:inline-flex;align-items:center;gap:.5rem;width:100%;justify-content:center;margin-top:1rem;
+  }
+  .btn-download:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(16,185,129,.5);}
+  .btn-row{display:flex;gap:1rem;justify-content:flex-end;margin-top:2rem;flex-wrap:wrap;}
+
+  /* ALERT */
+  .alert{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);
+    color:#fca5a5;padding:.75rem 1rem;border-radius:10px;font-size:.85rem;margin-bottom:1rem;display:none;}
+  .alert.show{display:block;}
+
+  /* INFO BOX */
+  .info-box{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);
+    color:#93c5fd;padding:.85rem 1rem;border-radius:10px;font-size:.84rem;margin-bottom:1.2rem;}
+
+  /* SECTION DIVIDER */
+  .section-divider{height:1px;background:rgba(255,255,255,.07);margin:1.5rem 0;}
+
+  /* OTHER TEXT INPUT */
+  #other-symptom-input{display:none;margin-top:.75rem;}
+
+  /* RESPONSIVE */
+  @media(max-width:600px){
+    .form-row{grid-template-columns:1fr;}
+    .progress-stages{gap:0;}
+    .stage-circle{width:32px;height:32px;font-size:.75rem;}
+    .stage-label{font-size:.62rem;}
+    .btn-row{flex-direction:column;}
+    .btn-primary,.btn-secondary{width:100%;justify-content:center;}
+    .doctor-card{flex-direction:column;text-align:center;}
+    .match-badge{margin-left:0;}
+  }
+
+  /* STEP VISIBILITY */
+  .step{display:none;}
+  .step.active{display:block;}
+
+  /* ANIMATIONS */
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .form-card{animation:fadeSlide .4s ease;}
+
+  /* SUMMARY CHIP */
+  .summary-chip{display:inline-flex;align-items:center;gap:.4rem;
+    background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.2);
+    color:#93c5fd;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;margin:.25rem;}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════ WELCOME PAGE ════════════════════════════════ -->
+<div id="welcome-page">
+  <div class="welcome-logo">🏥</div>
+  <div class="welcome-brand">MediSense</div>
+  <p class="welcome-tagline">AI-powered self-service health assistant designed for <strong style="color:#60a5fa;">everyone</strong> — including users with visual, hearing, or cognitive differences.</p>
+  <p class="welcome-sub">Voice guided · Real-time text cues · Step-by-step assistance</p>
+  <div class="badge-row">
+    <span class="badge">👁 Visually Impaired Friendly</span>
+    <span class="badge">👂 Hearing Support</span>
+    <span class="badge">🧠 Cognitive Assistance</span>
+    <span class="badge">🤖 AI-Powered</span>
+  </div>
+  <button class="btn-register" onclick="startApp()">📋 Register Now</button>
+  <div class="accessibility-icons">
+    <span>🔊 Voice Guide</span>
+    <span>✋ Gesture Control</span>
+    <span>💬 Text Cues</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ MAIN APP ════════════════════════════════ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="app-logo">🏥 MediSense</div>
+    <div class="app-step-label" id="header-step-label">Step 1 of 6 — Registration</div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-wrapper">
+    <div class="progress-stages">
+      <div class="stage active" id="stage-1">
+        <div class="stage-circle">1</div>
+        <div class="stage-label">Registration</div>
+      </div>
+      <div class="stage" id="stage-2">
+        <div class="stage-circle">2</div>
+        <div class="stage-label">Disease &amp; Symptoms</div>
+      </div>
+      <div class="stage" id="stage-3">
+        <div class="stage-circle">3</div>
+        <div class="stage-label">Hospital</div>
+      </div>
+      <div class="stage" id="stage-4">
+        <div class="stage-circle">4</div>
+        <div class="stage-label">Insurance</div>
+      </div>
+      <div class="stage" id="stage-5">
+        <div class="stage-circle">5</div>
+        <div class="stage-label">Payment</div>
+      </div>
+      <div class="stage" id="stage-6">
+        <div class="stage-circle">6</div>
+        <div class="stage-label">Receipt</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM CONTAINER -->
+  <div class="form-container">
+
+    <!-- ── STEP 1: REGISTRATION ── -->
+    <div class="step active" id="step-1">
+      <div class="form-card">
+        <div class="form-title">👤 Patient Registration</div>
+        <div class="form-subtitle">Please fill in your personal details to get started.</div>
+        <div class="alert" id="alert-1">⚠️ Please fill in all required fields correctly.</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name <span class="req">*</span></label>
+            <input type="text" id="fname" placeholder="e.g. John"/>
+          </div>
+          <div class="form-group">
+            <label>Last Name <span class="req">*</span></label>
+            <input type="text" id="lname" placeholder="e.g. Doe"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date of Birth <span class="req">*</span></label>
+            <input type="date" id="dob"/>
+          </div>
+          <div class="form-group">
+            <label>Gender <span class="req">*</span></label>
+            <select id="gender">
+              <option value="">Select gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Non-binary</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone Number <span class="req">*</span></label>
+            <input type="tel" id="phone" placeholder="+1 234 567 8900"/>
+          </div>
+          <div class="form-group">
+            <label>Email Address <span class="req">*</span></label>
+            <input type="email" id="email" placeholder="john@example.com"/>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Address <span class="req">*</span></label>
+            <input type="text" id="address" placeholder="Street, City, State, ZIP"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Blood Group</label>
+            <select id="blood">
+              <option value="">Select blood group</option>
+              <option>A+</option><option>A-</option>
+              <option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option>
+              <option>O+</option><option>O-</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Disability / Accessibility Need</label>
+            <select id="disability">
+              <option value="None">None</option>
+              <option>Visual Impairment</option>
+              <option>Hearing Impairment</option>
+              <option>Cognitive Difference</option>
+              <option>Mobility Impairment</option>
+              <option>Multiple</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Emergency Contact Name &amp; Number</label>
+            <input type="text" id="emergency" placeholder="e.g. Jane Doe – +1 234 567 8901"/>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="goStep(2)">Submit &amp; Continue →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: DISEASE & SYMPTOMS ── -->
+    <div class="step" id="step-2">
+      <div class="form-card">
+        <div class="form-title">🩺 Disease &amp; Symptoms</div>
+        <div class="form-subtitle">Select your condition and describe your symptoms so we can help you find a suitable hospital.</div>
+        <div class="alert" id="alert-2">⚠️ Please select a disease and at least one symptom (Other field is mandatory if selected).</div>
+
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Select Disease / Condition <span class="req">*</span></label>
+            <select id="disease" onchange="loadSymptoms()">
+              <option value="">-- Choose a disease or condition --</option>
+              <option value="cardiology">❤️ Cardiology (Heart)</option>
+              <option value="neurology">🧠 Neurology (Brain & Nerves)</option>
+              <option value="orthopedics">🦴 Orthopedics (Bones & Joints)</option>
+              <option value="dermatology">🩹 Dermatology (Skin)</option>
+              <option value="general">🩺 General Medicine</option>
+              <option value="ophthalmology">👁 Ophthalmology (Eyes)</option>
+              <option value="ent">👂 ENT (Ear, Nose &amp; Throat)</option>
+              <option value="gastro">🫀 Gastroenterology (Digestive)</option>
+              <option value="pulmonology">🫁 Pulmonology (Lungs)</option>
+              <option value="endocrinology">🔬 Endocrinology (Hormones)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="doctor-recommendation" class="doctor-recommendation" style="display:none;" aria-live="polite">
+          <h3>👩‍⚕️ Recommended Doctor / Specialist</h3>
+          <p><strong>Department:</strong> <span id="doctor-specialty">—</span></p>
+          <p><strong>Who to consult:</strong> <span id="doctor-title">—</span></p>
+          <p><strong>What they help with:</strong> <span id="doctor-description">—</span></p>
+          <p class="doctor-note">This is a specialty recommendation based on the selected condition, not a named doctor's verified profile. The supplied hospital dataset contains hospital specialties, but does not include individual doctors, qualifications, schedules, or appointment availability.</p>
+        </div>
+
+        <div id="symptoms-section" style="display:none;">
+          <div class="section-divider"></div>
+          <div class="form-group">
+            <label>Select Symptoms <span class="req">*</span> (choose all that apply)</label>
+            <div class="symptoms-grid" id="symptoms-grid"></div>
+          </div>
+
+          <!-- OTHER is always shown and mandatory when selected -->
+          <div id="other-symptom-input">
+            <div class="form-group" style="margin-top:.75rem;">
+              <label>Describe Other Symptom <span class="req">*</span></label>
+              <textarea id="other-text" placeholder="Please describe your symptom in detail..." rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Duration of Symptoms <span class="req">*</span></label>
+              <select id="duration">
+                <option value="">Select duration</option>
+                <option>Less than 1 day</option>
+                <option>1–3 days</option>
+                <option>4–7 days</option>
+                <option>1–2 weeks</option>
+                <option>2–4 weeks</option>
+                <option>1–3 months</option>
+                <option>More than 3 months</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Severity Level <span class="req">*</span></label>
+              <select id="severity">
+                <option value="">Select severity</option>
+                <option>Mild – minor discomfort</option>
+                <option>Moderate – affecting daily activities</option>
+                <option>Severe – unable to function normally</option>
+                <option>Critical – emergency level</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Additional Notes</label>
+              <textarea id="notes" placeholder="Any additional information about your condition, medications, allergies..." rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="goStep(1)">← Back</button>
+          <button class="btn-primary" onclick="goStep(3)">Submit &amp; Continue →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: HOSPITAL ── -->
+    <div class="step" id="step-3">
+      <div class="form-card">
+        <div class="form-title">🏥 Select Hospital</div>
+        <div class="form-subtitle">Choose a hospital based on your selected disease, available specialty, location and hospital information.</div>
+        <div class="alert" id="alert-3">⚠️ Please select a hospital to continue.</div>
+
+        <div class="info-box">🤖 <strong>Smart Hospital Matching:</strong> Hospitals are loaded from the hospital database and can be filtered using your selected disease/specialty.</div>
+
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Search Hospital</label>
+            <input type="text" id="hospital-search" placeholder="Search by hospital name, city or specialty" oninput="filterHospitals()"/>
+          </div>
+        </div>
+
+        <div id="hospital-list" class="hospital-list">
+          <div class="info-box">Loading hospitals...</div>
+        </div>
+
+        <div id="selected-hospital-card" class="hospital-card" style="display:none;">
+          <h3 id="selected-hospital-name">—</h3>
+          <div class="hospital-meta">
+            <div>📍 <span id="selected-hospital-address">—</span></div>
+            <div>🏙️ <span id="selected-hospital-city">—</span></div>
+            <div>📞 <span id="selected-hospital-contact">—</span></div>
+            <div>✉️ <span id="selected-hospital-email">—</span></div>
+          </div>
+          <div class="hospital-specialties">
+            <span class="summary-chip" id="selected-hospital-specialties">—</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="goStep(2)">← Back</button>
+          <button class="btn-primary" onclick="goStep(4)">Continue to Insurance →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: INSURANCE ── -->
+    <div class="step" id="step-4">
+      <div class="form-card">
+        <div class="form-title">🛡️ Insurance</div>
+        <div class="form-subtitle">Select your insurance coverage. Options are based on the selected hospital's supported insurance companies, TPA partners and government schemes.</div>
+        <div class="alert" id="alert-4">⚠️ Please select an insurance option or choose Self Pay.</div>
+
+        <div id="insurance-hospital-info" class="info-box">Select a hospital first to load its insurance options.</div>
+
+        <div class="form-group">
+          <label>Available Insurance / Schemes <span class="req">*</span></label>
+          <div id="insurance-list" class="insurance-list"></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="goStep(3)">← Back</button>
+          <button class="btn-primary" onclick="goStep(5)">Continue to Payment →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 5: PAYMENT ── -->
+    <div class="step" id="step-5">
+      <div class="form-card">
+        <div class="form-title">💳 Payment</div>
+        <div class="form-subtitle">Complete your payment for the selected hospital service.</div>
+        <div class="alert" id="alert-5">⚠️ Please fill in all payment details correctly.</div>
+
+        <!-- SUMMARY -->
+        <div style="background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.2rem;margin-bottom:1.5rem;">
+          <div style="font-size:.9rem;font-weight:700;color:#94a3b8;margin-bottom:.75rem;">📋 Booking Summary</div>
+          <div class="receipt-row"><span class="label">Patient</span><span class="value" id="sum-patient">—</span></div>
+          <div class="receipt-row"><span class="label">Hospital</span><span class="value" id="sum-hospital">—</span></div>
+          <div class="receipt-row"><span class="label">Insurance</span><span class="value" id="sum-insurance">—</span></div>
+          <div class="receipt-row"><span class="label">Consultation Fee</span><span class="value" style="color:#34d399;">$150.00</span></div>
+          <div class="receipt-row"><span class="label">Platform Fee</span><span class="value" style="color:#34d399;">$5.00</span></div>
+          <hr style="border-color:rgba(255,255,255,.08);margin:.6rem 0;"/>
+          <div class="receipt-row"><span class="label" style="font-weight:700;color:#f1f5f9;">Total</span><span class="value" style="color:#60a5fa;font-size:1.1rem;">$155.00</span></div>
+        </div>
+
+        <!-- PAYMENT TABS -->
+        <div class="payment-tabs">
+          <div class="pay-tab active" onclick="switchPayTab('card',this)">💳 Credit/Debit Card</div>
+          <div class="pay-tab" onclick="switchPayTab('cash',this)">💵 Cash</div>
+          <div class="pay-tab" onclick="switchPayTab('upi',this)">📱 UPI / Wallet</div>
+        </div>
+
+        <!-- CARD PAYMENT -->
+        <div id="pay-card">
+          <div class="card-visual">
+            <div class="card-chip"></div>
+            <div class="card-number-display" id="card-display">•••• •••• •••• ••••</div>
+            <div class="card-meta">
+              <div>
+                <div style="font-size:.65rem;color:#64748b;margin-bottom:.2rem;">CARD HOLDER</div>
+                <div id="card-name-display" style="color:#e2e8f0;font-size:.9rem;">YOUR NAME</div>
+              </div>
+              <div>
+                <div style="font-size:.65rem;color:#64748b;margin-bottom:.2rem;">EXPIRES</div>
+                <div id="card-exp-display" style="color:#e2e8f0;font-size:.9rem;">MM / YY</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Cardholder Name <span class="req">*</span></label>
+              <input type="text" id="card-name" placeholder="Name as on card" oninput="document.getElementById('card-name-display').textContent=this.value.toUpperCase()||'YOUR NAME'"/>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Card Number <span class="req">*</span></label>
+              <input type="text" id="card-num" placeholder="1234 5678 9012 3456" maxlength="19"
+                oninput="formatCard(this);document.getElementById('card-display').textContent=this.value||'•••• •••• •••• ••••'"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expiry Date <span class="req">*</span></label>
+              <input type="text" id="card-exp" placeholder="MM / YY" maxlength="7"
+                oninput="formatExp(this);document.getElementById('card-exp-display').textContent=this.value||'MM / YY'"/>
+            </div>
+            <div class="form-group">
+              <label>CVV <span class="req">*</span></label>
+              <input type="password" id="card-cvv" placeholder="•••" maxlength="4"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- CASH PAYMENT -->
+        <div id="pay-cash" style="display:none;">
+          <div class="info-box">💵 <strong>Cash Payment:</strong> Please proceed to the billing counter with your booking reference. Amount: <strong>$155.00</strong></div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Preferred Cash Collection Time</label>
+              <select id="cash-time">
+                <option>At the time of appointment</option>
+                <option>Before appointment (at counter)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- UPI PAYMENT -->
+        <div id="pay-upi" style="display:none;">
+          <div class="form-row full">
+            <div class="form-group">
+              <label>UPI ID / Wallet <span class="req">*</span></label>
+              <input type="text" id="upi-id" placeholder="e.g. username@upi or phone number"/>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Wallet Provider</label>
+              <select>
+                <option>PhonePe</option><option>Google Pay</option><option>Paytm</option>
+                <option>Amazon Pay</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="goStep(4)">← Back</button>
+          <button class="btn-primary" onclick="processPayment()">🔒 Pay $155.00 &amp; Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 6: RECEIPT ── -->
+    <div class="step" id="step-6">
+      <div class="form-card">
+        <div class="form-title">🎉 Booking Confirmed!</div>
+        <div class="form-subtitle">Your hospital service request and payment have been successfully completed. Download your receipt below.</div>
+
+        <div class="receipt-card" id="receipt-card">
+          <div class="receipt-header">
+            <div class="receipt-check">✅</div>
+            <div style="font-size:1.3rem;font-weight:800;color:#34d399;">Payment Successful</div>
+            <div style="font-size:.85rem;color:#64748b;margin-top:.3rem;" id="receipt-id">Booking ID: KV-XXXXXX</div>
+          </div>
+
+          <div class="receipt-row"><span class="label">Patient Name</span><span class="value" id="r-patient">—</span></div>
+          <div class="receipt-row"><span class="label">Date of Birth</span><span class="value" id="r-dob">—</span></div>
+          <div class="receipt-row"><span class="label">Contact</span><span class="value" id="r-contact">—</span></div>
+          <hr class="receipt-divider"/>
+          <div class="receipt-row"><span class="label">Disease / Condition</span><span class="value" id="r-disease">—</span></div>
+          <div class="receipt-row"><span class="label">Symptoms</span><span class="value" id="r-symptoms">—</span></div>
+          <hr class="receipt-divider"/>
+          <div class="receipt-row"><span class="label">Hospital</span><span class="value" id="r-hospital">—</span></div>
+          <div class="receipt-row"><span class="label">Hospital City</span><span class="value" id="r-city">—</span></div>
+          <div class="receipt-row"><span class="label">Insurance / Scheme</span><span class="value" id="r-insurance">—</span></div>
+          <hr class="receipt-divider"/>
+          <div class="receipt-row"><span class="label">Consultation Fee</span><span class="value">$150.00</span></div>
+          <div class="receipt-row"><span class="label">Platform Fee</span><span class="value">$5.00</span></div>
+          <div class="receipt-row"><span class="label" style="font-weight:700;color:#f1f5f9;">Total Paid</span><span class="value" style="color:#34d399;font-size:1.1rem;">$155.00</span></div>
+          <div class="receipt-row"><span class="label">Payment Method</span><span class="value" id="r-pay">—</span></div>
+          <div class="receipt-row"><span class="label">Payment Status</span><span class="value" style="color:#34d399;">✅ Confirmed</span></div>
+          <hr class="receipt-divider"/>
+          <div style="text-align:center;font-size:.78rem;color:#64748b;margin-top:.5rem;">
+            MediSense · AI-Powered Healthcare Access<br/>
+            For support: support@medisense.health | Hospital Support Desk
+          </div>
+        </div>
+
+        <button class="btn-download" onclick="downloadReceipt()">⬇️ Download Receipt (PDF)</button>
+        <div style="text-align:center;margin-top:1.5rem;">
+          <button class="btn-secondary" onclick="startNew()" style="font-size:.85rem;padding:.6rem 1.5rem;">🔄 Start New Booking</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end form-container -->
+</div><!-- end app -->
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const DOCTOR_GUIDE = {
+  cardiology: {
+    specialty: 'Cardiology',
+    title: 'Cardiologist (heart specialist)',
+    description: 'Heart-related symptoms such as chest discomfort, palpitations, or shortness of breath.'
+  },
+  neurology: {
+    specialty: 'Neurology',
+    title: 'Neurologist (brain and nerve specialist)',
+    description: 'Headaches, seizures, numbness, tremors, or changes in memory and speech.'
+  },
+  orthopedics: {
+    specialty: 'Orthopedics',
+    title: 'Orthopedic doctor (bones and joints specialist)',
+    description: 'Joint or back pain, bone injuries, stiffness, and movement-related problems.'
+  },
+  dermatology: {
+    specialty: 'Dermatology',
+    title: 'Dermatologist (skin specialist)',
+    description: 'Rashes, itching, acne, hair loss, and other skin or hair concerns.'
+  },
+  general: {
+    specialty: 'General Medicine',
+    title: 'General physician',
+    description: 'Common symptoms such as fever, cough, fatigue, nausea, and general illness.'
+  },
+  ophthalmology: {
+    specialty: 'Ophthalmology',
+    title: 'Ophthalmologist (eye specialist)',
+    description: 'Eye pain, redness, blurred vision, dryness, or other eye-related concerns.'
+  },
+  ent: {
+    specialty: 'ENT',
+    title: 'ENT specialist (ear, nose, and throat)',
+    description: 'Ear pain, hearing concerns, nasal congestion, sore throat, or swallowing issues.'
+  },
+  gastro: {
+    specialty: 'Gastroenterology',
+    title: 'Gastroenterologist (digestive-system specialist)',
+    description: 'Abdominal discomfort, reflux, bowel changes, nausea, and digestive concerns.'
+  },
+  pulmonology: {
+    specialty: 'Pulmonology',
+    title: 'Pulmonologist (lung and breathing specialist)',
+    description: 'Persistent cough, wheezing, and other lung or breathing-related concerns.'
+  },
+  endocrinology: {
+    specialty: 'Endocrinology',
+    title: 'Endocrinologist (hormone specialist)',
+    description: 'Hormone-related concerns such as unexplained weight changes, thirst, or frequent urination.'
+  }
+};
+
+function renderDoctorRecommendation(disease) {
+  const card = document.getElementById('doctor-recommendation');
+  const guide = DOCTOR_GUIDE[disease];
+  if (!card || !guide) {
+    if (card) card.style.display = 'none';
+    return;
+  }
+  document.getElementById('doctor-specialty').textContent = guide.specialty;
+  document.getElementById('doctor-title').textContent = guide.title;
+  document.getElementById('doctor-description').textContent = guide.description;
+  card.style.display = 'block';
+}
+
+const SYMPTOM_MAP = {
+  cardiology:   ['Chest pain or tightness','Shortness of breath','Heart palpitations','Dizziness or lightheadedness','Swollen ankles/feet','Fatigue on exertion','Irregular heartbeat'],
+  neurology:    ['Persistent headache','Memory loss or confusion','Seizures or convulsions','Numbness or tingling','Vision disturbances','Difficulty speaking','Tremors or shaking'],
+  orthopedics:  ['Joint pain or swelling','Back pain','Limited range of motion','Muscle weakness','Bone fracture / injury','Stiffness in morning','Clicking / popping joints'],
+  dermatology:  ['Rash or hives','Itching or burning skin','Acne or pimples','Skin discoloration','Hair loss','Dry or flaking skin','Lesions or sores'],
+  general:      ['Fever or chills','Persistent cough','Fatigue / weakness','Nausea or vomiting','Loss of appetite','Body aches','Unexplained weight loss'],
+  ophthalmology:['Blurred vision','Eye pain or redness','Double vision','Light sensitivity','Floaters in vision','Dry or watery eyes','Swollen eyelids'],
+  ent:          ['Ear pain or discharge','Hearing loss','Nasal congestion','Sore throat','Loss of smell/taste','Ringing in ears (tinnitus)','Difficulty swallowing'],
+  gastro:       ['Abdominal pain or cramps','Bloating or gas','Nausea or vomiting','Diarrhea or constipation','Acid reflux / heartburn','Blood in stool','Loss of appetite'],
+  pulmonology:  ['Shortness of breath','Chronic cough','Wheezing','Chest tightness','Coughing up blood','Sleep apnea symptoms','Rapid breathing'],
+  endocrinology:['Unexplained weight gain/loss','Excessive thirst','Frequent urination','Fatigue or weakness','Hair thinning','Mood swings','Cold/heat intolerance'],
+};
+
+let currentStep = 1;
+let selectedSymptoms = [];
+let payMethod = 'card';
+let hospitals = [];
+let filteredHospitals = [];
+let selectedHospital = null;
+let selectedInsurance = 'Self Pay';
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function startApp(){
+  document.getElementById('welcome-page').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+function goStep(n){
+  if(n > currentStep && !validate(currentStep)) return;
+
+  if(n===3) loadHospitals();
+  if(n===4) loadInsurance();
+  if(n===5) populateSummary();
+  if(n===6) populateReceipt();
+
+  document.getElementById('step-'+currentStep).classList.remove('active');
+  document.getElementById('stage-'+currentStep).classList.remove('active');
+  document.getElementById('stage-'+currentStep).classList.add('completed');
+
+  currentStep = n;
+  document.getElementById('step-'+n).classList.add('active');
+
+  for(let i=1;i<=6;i++){
+    const s=document.getElementById('stage-'+i);
+    s.classList.remove('active');
+    if(i<n) s.classList.add('completed'); else s.classList.remove('completed');
+  }
+  document.getElementById('stage-'+n).classList.add('active');
+
+  const labels=['','Registration','Disease & Symptoms','Hospital','Insurance','Payment','Receipt'];
+  document.getElementById('header-step-label').textContent=`Step ${n} of 6 — ${labels[n]}`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── VALIDATION ──────────────────────────────────────────────────────────────
+function validate(step){
+  if(step===1){
+    const ok = v('fname')&&v('lname')&&v('dob')&&v('gender')&&v('phone')&&v('email')&&v('address');
+    showAlert(1,!ok); return ok;
+  }
+  if(step===2){
+    const dis=document.getElementById('disease').value;
+    const dur=document.getElementById('duration').value;
+    const sev=document.getElementById('severity').value;
+    const hasSymptom=selectedSymptoms.length>0;
+    const otherOk = !selectedSymptoms.includes('Other') || (document.getElementById('other-text').value.trim()!=='');
+    const ok = dis && hasSymptom && dur && sev && otherOk;
+    showAlert(2,!ok); return ok;
+  }
+  if(step===3){
+    const ok=!!selectedHospital;
+    showAlert(3,!ok); return ok;
+  }
+  if(step===4){
+    const ok=!!selectedInsurance;
+    showAlert(4,!ok); return ok;
+  }
+  if(step===5){
+    if(payMethod==='card'){
+      const ok=v('card-name')&&v('card-num')&&v('card-exp')&&v('card-cvv');
+      showAlert(5,!ok); return ok;
+    }
+    if(payMethod==='upi'){
+      const ok=v('upi-id');
+      showAlert(5,!ok); return ok;
+    }
+    return true;
+  }
+  return true;
+}
+function v(id){return document.getElementById(id)?.value?.trim()!=='';}
+function showAlert(step,show){
+  const el=document.getElementById('alert-'+step);
+  if(el) el.classList.toggle('show',show);
+}
+
+// ─── SYMPTOMS ────────────────────────────────────────────────────────────────
+function loadSymptoms(){
+  const disease=document.getElementById('disease').value;
+  renderDoctorRecommendation(disease);
+  if(!disease){document.getElementById('symptoms-section').style.display='none';return;}
+  document.getElementById('symptoms-section').style.display='block';
+  selectedSymptoms=[];
+  const grid=document.getElementById('symptoms-grid');
+  const list=[...(SYMPTOM_MAP[disease]||[]),'Other'];
+  grid.innerHTML=list.map(s=>`
+    <div class="symptom-item" onclick="toggleSymptom(this,'${s.replace(/'/g,"\'")}')">
+      <input type="checkbox"/>
+      <div class="symptom-check"></div>
+      <span class="symptom-text">${s}</span>
+    </div>`).join('');
+  document.getElementById('other-symptom-input').style.display='none';
+  document.getElementById('other-text').value='';
+}
+
+function toggleSymptom(el,sym){
+  if(el.classList.contains('selected')){
+    el.classList.remove('selected');
+    selectedSymptoms=selectedSymptoms.filter(s=>s!==sym);
+  } else {
+    el.classList.add('selected');
+    selectedSymptoms.push(sym);
+  }
+  const hasOther=selectedSymptoms.includes('Other');
+  document.getElementById('other-symptom-input').style.display=hasOther?'block':'none';
+}
+
+// ─── HOSPITAL DATA ───────────────────────────────────────────────────────────
+async function loadHospitals(){
+  const list=document.getElementById('hospital-list');
+  if(hospitals.length){
+    filterHospitals();
+    return;
+  }
+  list.innerHTML='<div class="info-box">Loading hospitals from the database...</div>';
+  try{
+    const disease=document.getElementById('disease').value;
+    const response=await fetch('/api/hospitals?specialty='+encodeURIComponent(disease||''));
+    if(!response.ok) throw new Error('Unable to load hospitals');
+    hospitals=await response.json();
+    filteredHospitals=[...hospitals];
+    renderHospitals();
+  }catch(error){
+    list.innerHTML='<div class="info-box">⚠️ Could not load hospital data. Please make sure the Flask backend and database are running.</div>';
+    console.error(error);
+  }
+}
+
+function filterHospitals(){
+  const q=(document.getElementById('hospital-search').value||'').toLowerCase().trim();
+  filteredHospitals=hospitals.filter(h=>{
+    const text=[
+      h.hospital_name,h.city,h.address,h.contact_number,h.email,h.health_specialties
+    ].filter(Boolean).join(' ').toLowerCase();
+    return text.includes(q);
+  });
+  renderHospitals();
+}
+
+function renderHospitals(){
+  const list=document.getElementById('hospital-list');
+  if(!filteredHospitals.length){
+    list.innerHTML='<div class="info-box">No hospitals found for your search or selected condition.</div>';
+    return;
+  }
+  list.innerHTML=filteredHospitals.map((h,i)=>`
+    <div class="hospital-option ${selectedHospital && selectedHospital.id===h.id?'selected':''}" onclick="selectHospital(${h.id})">
+      <h4>🏥 ${escapeHtml(h.hospital_name||'Hospital')}</h4>
+      <p>📍 ${escapeHtml(h.city||'')} — ${escapeHtml(h.address||'')}</p>
+      <p>🩺 ${escapeHtml(h.health_specialties||'Specialties not listed')}</p>
+      <p>📞 ${escapeHtml(h.contact_number||'Not available')}</p>
+    </div>`).join('');
+}
+
+function selectHospital(id){
+  selectedHospital=hospitals.find(h=>Number(h.id)===Number(id))||null;
+  if(!selectedHospital) return;
+
+  document.getElementById('selected-hospital-card').style.display='block';
+  document.getElementById('selected-hospital-name').textContent=selectedHospital.hospital_name||'Hospital';
+  document.getElementById('selected-hospital-address').textContent=selectedHospital.address||'Not available';
+  document.getElementById('selected-hospital-city').textContent=selectedHospital.city||'Not available';
+  document.getElementById('selected-hospital-contact').textContent=selectedHospital.contact_number||'Not available';
+  document.getElementById('selected-hospital-email').textContent=selectedHospital.email||'Not available';
+  document.getElementById('selected-hospital-specialties').textContent=selectedHospital.health_specialties||'Not listed';
+  renderHospitals();
+}
+
+async function loadInsurance(){
+  const list=document.getElementById('insurance-list');
+  if(!selectedHospital){
+    list.innerHTML='<div class="info-box">Please select a hospital first.</div>';
+    return;
+  }
+  list.innerHTML='<div class="info-box">Loading insurance options...</div>';
+  try{
+    const response=await fetch('/api/hospitals/'+selectedHospital.id+'/insurance');
+    if(!response.ok) throw new Error('Unable to load insurance');
+    const options=await response.json();
+    renderInsurance(options);
+  }catch(error){
+    console.error(error);
+    renderInsurance([]);
+  }
+}
+
+function renderInsurance(options){
+  const list=document.getElementById('insurance-list');
+  document.getElementById('insurance-hospital-info').textContent=
+    'Insurance and scheme information for '+(selectedHospital.hospital_name||'the selected hospital')+'.';
+
+  const all=[{name:'Self Pay',type:'No insurance / pay directly'}];
+  options.forEach(o=>all.push(o));
+
+  list.innerHTML=all.map((o,i)=>`
+    <label class="insurance-option ${selectedInsurance===o.name?'selected':''}" onclick="chooseInsurance('${escapeJs(o.name)}',this)">
+      <input type="radio" name="insurance" ${selectedInsurance===o.name?'checked':''}/>
+      <div>
+        <div class="insurance-name">${escapeHtml(o.name)}</div>
+        <div class="insurance-type">${escapeHtml(o.type||'Insurance / scheme')}</div>
+      </div>
+    </label>`).join('');
+}
+
+function chooseInsurance(name,el){
+  selectedInsurance=name;
+  document.querySelectorAll('.insurance-option').forEach(item=>item.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  document.querySelectorAll('input[name="insurance"]').forEach(r=>{
+    r.checked=(r.parentElement.querySelector('.insurance-name')?.textContent===name);
+  });
+}
+
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeJs(value){
+  return String(value??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+// ─── PAYMENT ─────────────────────────────────────────────────────────────────
+function switchPayTab(tab,el){
+  payMethod=tab;
+  document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pay-card').style.display=tab==='card'?'block':'none';
+  document.getElementById('pay-cash').style.display=tab==='cash'?'block':'none';
+  document.getElementById('pay-upi').style.display=tab==='upi'?'block':'none';
+}
+
+function formatCard(input){
+  let v=input.value.replace(/\D/g,'').substring(0,16);
+  input.value=v.replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExp(input){
+  let v=input.value.replace(/\D/g,'');
+  if(v.length>=2) v=v.substring(0,2)+' / '+v.substring(2,4);
+  input.value=v;
+}
+
+function populateSummary(){
+  const fname=document.getElementById('fname').value;
+  const lname=document.getElementById('lname').value;
+  document.getElementById('sum-patient').textContent=`${fname} ${lname}`;
+  document.getElementById('sum-hospital').textContent=selectedHospital?.hospital_name||'—';
+  document.getElementById('sum-insurance').textContent=selectedInsurance||'Self Pay';
+}
+
+function processPayment(){
+  if(!validate(5)) return;
+  goStep(6);
+}
+
+// ─── RECEIPT ─────────────────────────────────────────────────────────────────
+function populateReceipt(){
+  const bookId='MS-'+Math.random().toString(36).substring(2,8).toUpperCase();
+  document.getElementById('receipt-id').textContent='Booking ID: '+bookId;
+  document.getElementById('r-patient').textContent=`${document.getElementById('fname').value} ${document.getElementById('lname').value}`;
+  document.getElementById('r-dob').textContent=document.getElementById('dob').value;
+  document.getElementById('r-contact').textContent=document.getElementById('phone').value;
+  document.getElementById('r-disease').textContent=document.getElementById('disease').options[document.getElementById('disease').selectedIndex].text;
+  const symText=selectedSymptoms.join(', ')+(document.getElementById('other-text').value?' ('+document.getElementById('other-text').value+')':'');
+  document.getElementById('r-symptoms').textContent=symText||'—';
+  document.getElementById('r-hospital').textContent=selectedHospital?.hospital_name||'—';
+  document.getElementById('r-city').textContent=selectedHospital?.city||'—';
+  document.getElementById('r-insurance').textContent=selectedInsurance||'Self Pay';
+  const payLabels={card:'Credit/Debit Card',cash:'Cash',upi:'UPI / Wallet'};
+  document.getElementById('r-pay').textContent=payLabels[payMethod];
+}
+
+function downloadReceipt(){
+  const card=document.getElementById('receipt-card');
+  const rows=[...card.querySelectorAll('.receipt-row')];
+  let text='MEDISENSE\nAI-Powered Healthcare Access\n';
+  text+='═'.repeat(45)+'\n';
+  text+=document.getElementById('receipt-id').textContent+'\n';
+  text+='═'.repeat(45)+'\n\n';
+  rows.forEach(r=>{
+    const lbl=r.querySelector('.label')?.textContent||'';
+    const val=r.querySelector('.value')?.textContent||'';
+    if(lbl) text+=lbl.padEnd(22)+val+'\n';
+  });
+  text+='\n'+'─'.repeat(45)+'\nFor support: support@medisense.health | Hospital Support Desk\n';
+  const blob=new Blob([text],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`MediSense_Receipt_${document.getElementById('receipt-id').textContent.replace('Booking ID: ','')}.txt`;
+  a.click();
+}
+
+function startNew(){
+  location.reload();
+}
+</script>
+</body>
+</html>
